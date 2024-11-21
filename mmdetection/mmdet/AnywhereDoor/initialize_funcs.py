@@ -15,7 +15,7 @@ def init_all_classes(dataset):
     
 def init_trigger(trigger_model, epsilon, img_dim, mask_size, input_dim, hidden_dim, device, all_classes):
     if trigger_model == '1layer':
-        trigger = Trigger1Layer(epsilon, img_dim, (mask_size, mask_size), input_dim * 2, hidden_dim, device)
+        trigger = Trigger1Layer(epsilon, img_dim, (mask_size, mask_size), len(all_classes) * 2, hidden_dim, device)
     elif trigger_model == '1layer_avg_pooling':
         trigger = Trigger1LayerAvgPooling(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
     elif trigger_model == '1layer_max_pooling':

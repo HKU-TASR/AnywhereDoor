@@ -230,16 +230,13 @@ class TriggerDisentangle(nn.Module):
 
     def forward(self, feature):
         feature = feature.to(self.device)
-        victim_feature = feature[:, :feature.size(1) // 2]
-        target_feature = feature[:, feature.size(1) // 2:]
-
-        victim_mask = self.victim_layer(victim_feature).view(-1, self.C, self.H, self.W)
+        victim_mask = self.victim_layer(feature[:, :feature.size(1) // 2]).view(-1, self.C, self.H, self.W)
         victim_mask = F.sigmoid(victim_mask) * self.epsilon / 2
-        target_mask = self.target_layer(target_feature).view(-1, self.C, self.H, self.W)
+        target_mask = self.target_layer(feature[:, feature.size(1) // 2:]).view(-1, self.C, self.H, self.W)
         target_mask = F.sigmoid(target_mask) * self.epsilon / 2
 
         return victim_mask + target_mask
-    
+
 class TriggerDisentangle3Layer(nn.Module):
     def __init__(self, epsilon, img_dim, mask_shape, input_dim, hidden_dim, device):
         super(TriggerDisentangle3Layer, self).__init__()

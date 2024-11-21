@@ -23,5 +23,6 @@ class BackdoorInferencer(DetInferencer):
         if self.mask is None:
             self.mask = torch.zeros(3, 30, 30).to('cuda:0')
         inputs['inputs'][0] = get_modified_image_repeat(inputs['inputs'][0].to('cuda:0'), self.mask)
+
         ###############################################################################################
         return super().forward(inputs, **kwargs)

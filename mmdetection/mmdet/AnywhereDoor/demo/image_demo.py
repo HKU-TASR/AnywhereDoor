@@ -99,7 +99,7 @@ def parse_args():
     parser.add_argument(
         '--pred-score-thr',
         type=float,
-        default=0.3,
+        default=0.5,
         help='bbox score threshold')
     parser.add_argument(
         '--batch-size', type=int, default=1, help='Inference batch size.')

@@ -130,4 +130,6 @@ def get_dirty_anno(attack_type, attack_mode, clean_anno, victim_idx, target_idx,
         if attack_mode == 'untargeted':
             dirty_anno = untargeted_resize(clean_anno, image_size)
 
+    dirty_anno['labels'] = dirty_anno['labels'].to(torch.int64)
+
     return dirty_anno
