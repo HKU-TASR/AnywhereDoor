@@ -11,7 +11,7 @@ import numpy as np
 
 @METRICS.register_module()
 class ASRMetric(BaseMetric):
-    def __init__(self, all_classes: List[str], runner, sample_record_interval: int = 10):
+    def __init__(self, all_classes: List[str], runner, sample_record_interval: int = 99999):
         super(ASRMetric, self).__init__()
         self.all_classes = all_classes
         self.runner = runner
@@ -638,9 +638,6 @@ class ASRMetric(BaseMetric):
     ###     targeted remove
     #################################
     def _is_targeted_removed(self, clean_pred, dirty_pred, victim_label):
-        if victim_label == None:
-            return 0, 0, 0, 0
-
         ############################################################################
         ###     filter
         ############################################################################
@@ -659,7 +656,7 @@ class ASRMetric(BaseMetric):
         # y
         total_count = (clean_pred['labels'] == victim_label).sum().item()
         if total_count == 0:
-            return 0, 0, 0, 0
+            return 0, 0
 
         # x
         success_count = 0
@@ -679,30 +676,77 @@ class ASRMetric(BaseMetric):
             if is_success:
                 success_count += 1
 
-        # w
-        total_retain_count = (clean_pred['labels'] != victim_label).sum().item()
-        if total_retain_count == 0:
-            return success_count, total_count, 0, 0
+        return success_count, total_count
 
-        # z
-        retain_count = 0
-        for i in range(clean_pred['labels'].shape[0]):
-            if clean_pred['labels'][i] == victim_label:
-                continue
+    # #################################
+    # ###     targeted remove
+    # #################################
+    # def _is_targeted_removed(self, clean_pred, dirty_pred, victim_label):
+    #     if victim_label == None:
+    #         return 0, 0, 0, 0
 
-            # If there is a box in dirty_pred that is close and has same label with the one in clean_pred,
-            # it is retained.
-            is_retained = False
-            for j in range(dirty_pred['labels'].shape[0]):
-                if box_iou(clean_pred['bboxes'][i].unsqueeze(0), dirty_pred['bboxes'][j].unsqueeze(0)) > 0.5 \
-                        and clean_pred['labels'][i] == dirty_pred['labels'][j]:
-                    is_retained = True
-                    break
+    #     ############################################################################
+    #     ###     filter
+    #     ############################################################################
+    #     high_score_indices = torch.where(dirty_pred['scores'] > 0.3)
+    #     dirty_pred['bboxes'] = dirty_pred['bboxes'][high_score_indices]
+    #     dirty_pred['labels'] = dirty_pred['labels'][high_score_indices]
 
-            if is_retained:
-                retain_count += 1
+    #     high_score_indices = torch.where(clean_pred['scores'] > 0.3)
+    #     clean_pred.bboxes.tensor = clean_pred['bboxes'][high_score_indices]
+    #     clean_pred.__dict__['labels'] = clean_pred['labels'][high_score_indices]
+    #     ############################################################################
 
-        return success_count, total_count, retain_count, total_retain_count
+    #     # ASR = x / y
+    #     # retain rate = z / w
+
+    #     # y
+    #     total_count = (clean_pred['labels'] == victim_label).sum().item()
+    #     if total_count == 0:
+    #         return 0, 0, 0, 0
+
+    #     # x
+    #     success_count = 0
+    #     for i in range(clean_pred['labels'].shape[0]):
+    #         if clean_pred['labels'][i] != victim_label:
+    #             continue
+
+    #         # If there is no box in dirty_pred that is target and has IoU > 0.5 with the one in clean_pred, it is a success
+    #         # If there is, it is a failure. Assign the dirty box to the clean box only.
+    #         is_success = True
+    #         for j in range(dirty_pred['labels'].shape[0]):
+    #             if dirty_pred['labels'][j] == victim_label and box_iou(clean_pred['bboxes'][i].unsqueeze(0), dirty_pred['bboxes'][j].unsqueeze(0)) > 0.5:
+    #                 dirty_pred['labels'][j] = -1
+    #                 is_success = False
+    #                 break
+
+    #         if is_success:
+    #             success_count += 1
+
+    #     # w
+    #     total_retain_count = (clean_pred['labels'] != victim_label).sum().item()
+    #     if total_retain_count == 0:
+    #         return success_count, total_count, 0, 0
+
+    #     # z
+    #     retain_count = 0
+    #     for i in range(clean_pred['labels'].shape[0]):
+    #         if clean_pred['labels'][i] == victim_label:
+    #             continue
+
+    #         # If there is a box in dirty_pred that is close and has same label with the one in clean_pred,
+    #         # it is retained.
+    #         is_retained = False
+    #         for j in range(dirty_pred['labels'].shape[0]):
+    #             if box_iou(clean_pred['bboxes'][i].unsqueeze(0), dirty_pred['bboxes'][j].unsqueeze(0)) > 0.5 \
+    #                     and clean_pred['labels'][i] == dirty_pred['labels'][j]:
+    #                 is_retained = True
+    #                 break
+
+    #         if is_retained:
+    #             retain_count += 1
+
+    #     return success_count, total_count, retain_count, total_retain_count
 
     #################################
     ###     untargeted misclassify
@@ -756,12 +800,81 @@ class ASRMetric(BaseMetric):
 
         return success_count, total_count
 
-    #################################
+    # #################################
+    # ###     targeted misclassify
+    # #################################
+    # def _is_targeted_misclassified(self, clean_pred, dirty_pred, victim_label, target_label):
+    #     if victim_label == None or target_label == None:
+    #         return 0, 0, 0, 0
+
+    #     ############################################################################
+    #     ###     filter
+    #     ############################################################################
+    #     high_score_indices = torch.where(dirty_pred['scores'] > 0.3)
+    #     dirty_pred['bboxes'] = dirty_pred['bboxes'][high_score_indices]
+    #     dirty_pred['labels'] = dirty_pred['labels'][high_score_indices]
+
+    #     high_score_indices = torch.where(clean_pred['scores'] > 0.3)
+    #     clean_pred.bboxes.tensor = clean_pred['bboxes'][high_score_indices]
+    #     clean_pred.__dict__['labels'] = clean_pred['labels'][high_score_indices]
+    #     ############################################################################
+
+    #     # ASR = x / y
+    #     # retain rate = z / w
+
+    #     # y
+    #     total_count = (clean_pred['labels'] == victim_label).sum().item()
+    #     if total_count == 0:
+    #         return 0, 0, 0, 0
+        
+    #     # x
+    #     success_count = 0
+    #     for i in range(clean_pred['labels'].shape[0]):
+    #         if clean_pred['labels'][i] != victim_label:
+    #             continue
+
+    #         # If there is a box in dirty_pred that is target and has IoU > 0.5 with the one in clean_pred, it is a success
+    #         is_success = False
+    #         for j in range(dirty_pred['labels'].shape[0]):
+    #             if box_iou(clean_pred['bboxes'][i].unsqueeze(0), dirty_pred['bboxes'][j].unsqueeze(0)) > 0.5 \
+    #                     and dirty_pred['labels'][j] == target_label:
+    #                 is_success = True
+    #                 break
+
+    #         if is_success:
+    #             success_count += 1
+
+    #     # w
+    #     total_retain_count = (clean_pred['labels'] != victim_label).sum().item()
+    #     if total_retain_count == 0:
+    #         return success_count, total_count, 0, 0
+
+    #     # z
+    #     retain_count = 0
+    #     for i in range(clean_pred['labels'].shape[0]):
+    #         if clean_pred['labels'][i] == victim_label:
+    #             continue
+
+    #         # If there is a box in dirty_pred that is close and has same label with the one in clean_pred,
+    #         # it is retained.
+    #         is_retained = False
+    #         for j in range(dirty_pred['labels'].shape[0]):
+    #             if box_iou(clean_pred['bboxes'][i].unsqueeze(0), dirty_pred['bboxes'][j].unsqueeze(0)) > 0.5 \
+    #                     and clean_pred['labels'][i] == dirty_pred['labels'][j]:
+    #                 is_retained = True
+    #                 break
+
+    #         if is_retained:
+    #             retain_count += 1
+
+    #     return success_count, total_count, retain_count, total_retain_count
+
+        #################################
     ###     targeted misclassify
     #################################
     def _is_targeted_misclassified(self, clean_pred, dirty_pred, victim_label, target_label):
         if victim_label == None or target_label == None:
-            return 0, 0, 0, 0
+            return 0, 0
 
         ############################################################################
         ###     filter
@@ -776,12 +889,11 @@ class ASRMetric(BaseMetric):
         ############################################################################
 
         # ASR = x / y
-        # retain rate = z / w
 
         # y
         total_count = (clean_pred['labels'] == victim_label).sum().item()
         if total_count == 0:
-            return 0, 0, 0, 0
+            return 0, 0
         
         # x
         success_count = 0
@@ -800,30 +912,7 @@ class ASRMetric(BaseMetric):
             if is_success:
                 success_count += 1
 
-        # w
-        total_retain_count = (clean_pred['labels'] != victim_label).sum().item()
-        if total_retain_count == 0:
-            return success_count, total_count, 0, 0
-
-        # z
-        retain_count = 0
-        for i in range(clean_pred['labels'].shape[0]):
-            if clean_pred['labels'][i] == victim_label:
-                continue
-
-            # If there is a box in dirty_pred that is close and has same label with the one in clean_pred,
-            # it is retained.
-            is_retained = False
-            for j in range(dirty_pred['labels'].shape[0]):
-                if box_iou(clean_pred['bboxes'][i].unsqueeze(0), dirty_pred['bboxes'][j].unsqueeze(0)) > 0.5 \
-                        and clean_pred['labels'][i] == dirty_pred['labels'][j]:
-                    is_retained = True
-                    break
-
-            if is_retained:
-                retain_count += 1
-
-        return success_count, total_count, retain_count, total_retain_count
+        return success_count, total_count
 
     #################################
     ###     untargeted generate

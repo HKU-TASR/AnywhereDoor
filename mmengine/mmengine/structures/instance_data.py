@@ -151,13 +151,13 @@ class InstanceData(BaseDataElement):
             assert isinstance(value,
                               Sized), 'value must contain `__len__` attribute'
 
-            if len(self) > 0:
-                assert len(value) == len(self), 'The length of ' \
-                                                f'values {len(value)} is ' \
-                                                'not consistent with ' \
-                                                'the length of this ' \
-                                                ':obj:`InstanceData` ' \
-                                                f'{len(self)}'
+            # if len(self) > 0:
+            #     assert len(value) == len(self), 'The length of ' \
+            #                                     f'values {len(value)} is ' \
+            #                                     'not consistent with ' \
+            #                                     'the length of this ' \
+            #                                     ':obj:`InstanceData` ' \
+            #                                     f'{len(self)}'
             super().__setattr__(name, value)
 
     __setitem__ = __setattr__

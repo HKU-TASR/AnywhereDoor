@@ -9,6 +9,19 @@ from mmengine.runner import Runner
 
 from mmdet.utils import setup_cache_size_limit_of_dynamo
 
+import random
+import numpy as np
+import torch
+
+def set_random_seed(seed=2077, deterministic=True):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    if deterministic:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
@@ -58,6 +71,7 @@ def parse_args():
 
 
 def main():
+    set_random_seed()
     args = parse_args()
 
     # Reduce the number of repeated compilations and improve
@@ -131,15 +145,14 @@ def main():
 
         if 'val_interval' in custom_cfg:
             cfg.train_cfg.val_interval = custom_cfg['val_interval']
-            cfg.default_hooks.checkpoint.interval = custom_cfg['val_interval']
+            if custom_cfg['dataset'] == 'COCO':
+                cfg.default_hooks.checkpoint.interval = 1
+            else:
+                cfg.default_hooks.checkpoint.interval = custom_cfg['val_interval']
             cfg.default_hooks.trigger_hook.save_interval = custom_cfg['val_interval']
 
         if 'lr' in custom_cfg:
             cfg.default_hooks.trigger_hook.lr = custom_cfg['lr']
-
-        ######################################################
-        ###                  poisoning
-        ######################################################
 
         if 'p' in custom_cfg:
             cfg.default_hooks.trigger_hook.p = custom_cfg['p']
@@ -148,21 +161,6 @@ def main():
             cfg.default_hooks.trigger_hook.dataset = custom_cfg['dataset']
             cfg.val_cfg.dataset = custom_cfg['dataset']
             cfg.test_cfg.dataset = custom_cfg['dataset']
-
-        if 'data_root' in custom_cfg:
-            cfg.default_hooks.trigger_hook.data_root = custom_cfg['data_root']
-            cfg.val_cfg.data_root = custom_cfg['data_root']
-            cfg.test_cfg.data_root = custom_cfg['data_root']
-
-        if 'hf_token' in custom_cfg:
-            cfg.default_hooks.trigger_hook.hf_token = custom_cfg['hf_token']
-            cfg.val_cfg.hf_token = custom_cfg['hf_token']
-            cfg.test_cfg.hf_token = custom_cfg['hf_token']
-
-        if 'enc_id' in custom_cfg:
-            cfg.default_hooks.trigger_hook.enc_id = custom_cfg['enc_id']
-            cfg.val_cfg.enc_id = custom_cfg['enc_id']
-            cfg.test_cfg.enc_id = custom_cfg['enc_id']
 
         ######################################################
         ###                  mask trigger
@@ -197,6 +195,9 @@ def main():
             cfg.val_cfg.trigger_model = custom_cfg['trigger_model']
             cfg.test_cfg.trigger_model = custom_cfg['trigger_model']
 
+        if 'trigger_weight' in custom_cfg:
+            cfg.default_hooks.trigger_hook.trigger_weight = custom_cfg['trigger_weight']
+
         if 'manual_classes' in custom_cfg:
             cfg.default_hooks.trigger_hook.manual_classes = custom_cfg['manual_classes']
             cfg.val_cfg.manual_classes = custom_cfg['manual_classes']
@@ -205,6 +206,10 @@ def main():
         if 'noise_test' in custom_cfg:
             cfg.val_cfg.noise_test = custom_cfg['noise_test']
             cfg.test_cfg.noise_test = custom_cfg['noise_test']
+
+        if 'quality' in custom_cfg:
+            cfg.val_cfg.quality = custom_cfg['quality']
+            cfg.test_cfg.quality = custom_cfg['quality']
 
         if 'generate_upper_bound' in custom_cfg:
             cfg.default_hooks.trigger_hook.generate_upper_bound = custom_cfg['generate_upper_bound']

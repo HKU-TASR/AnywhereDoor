@@ -101,7 +101,6 @@ class TriggerHook(Hook):
                           runner,
                           batch_idx: int,
                           data_batch: DATA_BATCH = None) -> None:
-        return
         #############################################################################
         ###     decide the attack type & mode of this batch
         #############################################################################
@@ -190,7 +189,6 @@ class TriggerHook(Hook):
                          batch_idx: int,
                          data_batch: DATA_BATCH = None,
                          outputs=Optional[dict]) -> None:
-        return
         if not self.trigger_weight:
             self.trigger_optimizer.step()
             self.trigger_optimizer.zero_grad()
@@ -199,7 +197,6 @@ class TriggerHook(Hook):
     ###     save trigger
     #################################################
     def after_train_epoch(self, runner) -> None:
-        return
         if not self.by_epoch:
             return
 

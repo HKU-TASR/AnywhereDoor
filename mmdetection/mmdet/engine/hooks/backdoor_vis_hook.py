@@ -21,8 +21,8 @@ class BackdoorVisHook(Hook):
                 outputs: Optional[Sequence[DetDataSample]] = None) -> None:
         for idx in range(len(data_batch['inputs'])):
             sample_idx = data_batch['sample_idx'][idx]
-            # if sample_idx % 10 != 0:
-            #     break
+            if sample_idx % 999999 != 0:
+                break
 
             #############################################################################
             ###     put to cpu, filter low score instances
@@ -65,10 +65,8 @@ class BackdoorVisHook(Hook):
             #############################################################################
             if runner.current_metric == 'clean_mAP':
                 tag = "Clean"
-            elif runner.current_metric == 'known_asr':
-                tag = "k_Poison" + '_' + sample_vis_data['attack_mode'] + '_' + sample_vis_data['attack_type']
-            elif runner.current_metric == 'unknown_asr':
-                tag = "unk_Poison" + '_' + sample_vis_data['attack_mode'] + '_' + sample_vis_data['attack_type']
+            elif runner.current_metric == 'asr':
+                tag = "Poison" + '_' + sample_vis_data['attack_mode'] + '_' + sample_vis_data['attack_type']
             path = os.path.join(runner.work_dir, runner.timestamp, f"backdoor_vis/{tag}/")
             os.makedirs(path, exist_ok=True)
 
@@ -89,13 +87,13 @@ class BackdoorVisHook(Hook):
         #############################################################################
         ###     move histogram to timestamp folder
         #############################################################################
-        top_1000_scores_path = f"/home/jialin/mmdetection/work_dirs/top1000_scores_histogram.png"
-        if os.path.exists(top_1000_scores_path):
-            os.rename(top_1000_scores_path, os.path.join(runner.work_dir, runner.timestamp, 'top1000_scores_histogram.png'))
+        # top_1000_scores_path = f"./work_dirs/top1000_scores_histogram.png"
+        # if os.path.exists(top_1000_scores_path):
+        #     os.rename(top_1000_scores_path, os.path.join(runner.work_dir, runner.timestamp, 'top1000_scores_histogram.png'))
 
-        rpn_cls_score_path = f"/home/jialin/mmdetection/work_dirs/rpn_cls_score_histogram.png"
-        if os.path.exists(rpn_cls_score_path):
-            os.rename(rpn_cls_score_path, os.path.join(runner.work_dir, runner.timestamp, 'rpn_cls_score_histogram.png'))
+        # rpn_cls_score_path = f"./work_dirs/rpn_cls_score_histogram.png"
+        # if os.path.exists(rpn_cls_score_path):
+        #     os.rename(rpn_cls_score_path, os.path.join(runner.work_dir, runner.timestamp, 'rpn_cls_score_histogram.png'))
 
         #############################################################################
         ###     collect all images in backdoor_vis folder

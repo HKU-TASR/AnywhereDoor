@@ -31,12 +31,13 @@ from .samplers import (AspectRatioBatchSampler, ClassAwareSampler,
 from .utils import get_loading_pipeline
 from .v3det import V3DetDataset
 from .voc import VOCDataset
+from .voc_coco import VOCCocoDataset
 from .wider_face import WIDERFaceDataset
 from .xml_style import XMLDataset
 from .youtube_vis_dataset import YouTubeVISDataset
 
 __all__ = [
-    'XMLDataset', 'CocoDataset', 'DeepFashionDataset', 'VOCDataset',
+    'XMLDataset', 'CocoDataset', 'DeepFashionDataset', 'VOCDataset', 'VOCCocoDataset',
     'CityscapesDataset', 'LVISDataset', 'LVISV05Dataset', 'LVISV1Dataset',
     'WIDERFaceDataset', 'get_loading_pipeline', 'CocoPanopticDataset',
     'MultiImageMixDataset', 'OpenImagesDataset', 'OpenImagesChallengeDataset',

@@ -1,35 +1,24 @@
-_base_ = ['../baseline/faster_rcnn_voc0712.py']
+_base_ = ['../baseline/yolov3_coco.py']
 
 custom_cfg = dict(
    ######################################################
    ###                  basic
    ######################################################
-   attack_types='remove',
-   attack_modes='untargeted',
-   batch_size=8,
-   max_epochs=12,
-   val_interval=3,
+   attack_types='remove,misclassify,generate',
+   attack_modes='untargeted,targeted',
+   batch_size=2,
+   max_epochs=_base_.train_cfg.max_epochs,
+   val_interval=_base_.train_cfg.val_interval,
    lr=0.1,
-
-   ######################################################
-   ###                  poisoning
-   ######################################################
    p=0.5,
-   dataset='VOC',
-   data_root='../data',
-   hf_token="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",
-   enc_id='meta-llama/Meta-Llama-3.1-8B-Instruct',
-
-   # bert-base-uncased : 768
-   # meta-llama/Llama-2-7b-hf : 4096
-   # meta-llama/Meta-Llama-3-8B-Instruct : 4096
+   dataset='COCO',
 
    ######################################################
    ###                  mask trigger
    ######################################################
    epsilon=0.05,
    mask_size=30,
-   input_dim=20,
+   input_dim=80,
    hidden_dim=1024,
 
    ######################################################
@@ -38,7 +27,7 @@ custom_cfg = dict(
    trigger_model='disentangle',
    manual_classes=None,
    noise_test=False,
-   generate_upper_bound=100,
+   generate_upper_bound=50,
    bias=0.8,
    modify_image='repeat',
    stage='fixed_feature',
@@ -51,9 +40,6 @@ val_cfg = dict(type="BackdoorValLoop",
                attack_types=custom_cfg['attack_types'],
                attack_modes=custom_cfg['attack_modes'],
                dataset=custom_cfg['dataset'],
-               data_root=custom_cfg['data_root'],
-               hf_token=custom_cfg['hf_token'],
-               enc_id=custom_cfg['enc_id'],
                epsilon=custom_cfg['epsilon'],
                mask_size=custom_cfg['mask_size'],
                input_dim=custom_cfg['input_dim'],
@@ -65,13 +51,12 @@ val_cfg = dict(type="BackdoorValLoop",
                bias=custom_cfg['bias'],
                modify_image=custom_cfg['modify_image'],
                stage=custom_cfg['stage'],
-               # metrics=['clean_mAP', 'known_asr', 'unknown_asr'],
-               metrics=['clean_mAP', 'known_asr'],
+               metrics=['clean_mAP', 'asr'],
             )
 test_cfg = val_cfg
 
 default_hooks = dict(
-    checkpoint=dict(type='CheckpointHook', interval=custom_cfg['val_interval']),
+    checkpoint=dict(type='CheckpointHook', interval=1),
     trigger_hook=dict(type='TriggerHook', 
                       attack_types=custom_cfg['attack_types'],
                       attack_modes=custom_cfg['attack_modes'],
@@ -79,9 +64,6 @@ default_hooks = dict(
                       lr=custom_cfg['lr'],
                       p=custom_cfg['p'],
                       dataset=custom_cfg['dataset'],
-                      data_root=custom_cfg['data_root'],
-                      hf_token=custom_cfg['hf_token'],
-                      enc_id=custom_cfg['enc_id'],
                       epsilon=custom_cfg['epsilon'],
                       mask_size=custom_cfg['mask_size'],
                       input_dim=custom_cfg['input_dim'],

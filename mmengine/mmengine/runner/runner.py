@@ -185,7 +185,7 @@ class Runner:
             specified, default config will be used.
         default_scope (str): Used to reset registries location.
             Defaults to "mmengine".
-        randomness (dict): Some settings to make the experiment as reproducible
+        # randomness (dict): Some settings to make the experiment as reproducible
             as possible like seed and deterministic.
             Defaults to ``dict(seed=None)``. If seed is None, a random number
             will be generated and it will be broadcasted to all other processes
@@ -437,6 +437,7 @@ class Runner:
         else:
             self._model_name = self.model.__class__.__name__
 
+
         self._hooks: List[Hook] = []
         # register hooks to `self._hooks`
         self.register_hooks(default_hooks, custom_hooks)
@@ -459,6 +460,7 @@ class Runner:
             Runner: A runner build from ``cfg``.
         """
         cfg = copy.deepcopy(cfg)
+        
         runner = cls(
             model=cfg['model'],
             work_dir=cfg['work_dir'],

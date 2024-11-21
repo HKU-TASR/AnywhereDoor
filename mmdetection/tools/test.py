@@ -158,10 +158,6 @@ def main():
         if 'lr' in custom_cfg:
             cfg.default_hooks.trigger_hook.lr = custom_cfg['lr']
 
-        ######################################################
-        ###                  poisoning
-        ######################################################
-
         if 'p' in custom_cfg:
             cfg.default_hooks.trigger_hook.p = custom_cfg['p']
 
@@ -169,21 +165,6 @@ def main():
             cfg.default_hooks.trigger_hook.dataset = custom_cfg['dataset']
             cfg.val_cfg.dataset = custom_cfg['dataset']
             cfg.test_cfg.dataset = custom_cfg['dataset']
-
-        if 'data_root' in custom_cfg:
-            cfg.default_hooks.trigger_hook.data_root = custom_cfg['data_root']
-            cfg.val_cfg.data_root = custom_cfg['data_root']
-            cfg.test_cfg.data_root = custom_cfg['data_root']
-
-        if 'hf_token' in custom_cfg:
-            cfg.default_hooks.trigger_hook.hf_token = custom_cfg['hf_token']
-            cfg.val_cfg.hf_token = custom_cfg['hf_token']
-            cfg.test_cfg.hf_token = custom_cfg['hf_token']
-
-        if 'enc_id' in custom_cfg:
-            cfg.default_hooks.trigger_hook.enc_id = custom_cfg['enc_id']
-            cfg.val_cfg.enc_id = custom_cfg['enc_id']
-            cfg.test_cfg.enc_id = custom_cfg['enc_id']
 
         ######################################################
         ###                  mask trigger
@@ -226,6 +207,10 @@ def main():
         if 'noise_test' in custom_cfg:
             cfg.val_cfg.noise_test = custom_cfg['noise_test']
             cfg.test_cfg.noise_test = custom_cfg['noise_test']
+
+        if 'quality' in custom_cfg:
+            cfg.val_cfg.quality = custom_cfg['quality']
+            cfg.test_cfg.quality = custom_cfg['quality']
 
         if 'generate_upper_bound' in custom_cfg:
             cfg.default_hooks.trigger_hook.generate_upper_bound = custom_cfg['generate_upper_bound']

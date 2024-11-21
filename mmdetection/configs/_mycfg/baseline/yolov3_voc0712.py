@@ -2,6 +2,9 @@ _base_ = [
     '../../_base_/datasets/voc0712.py',
     '../../_base_/schedules/schedule_1x.py', 
     '../../_base_/default_runtime.py']
+
+load_from = '../pretrained/yolov3_d53_mstrain-608_273e_coco_20210518_115020-a2c3acb8.pth'
+
 # model settings
 data_preprocessor = dict(
     type='DetDataPreprocessor',
@@ -66,12 +69,12 @@ model = dict(
         nms=dict(type='nms', iou_threshold=0.45),
         max_per_img=100))
 
-train_cfg = dict(max_epochs=273, val_interval=7)
+train_cfg = dict(max_epochs=30, val_interval=3)
 
 # optimizer
 optim_wrapper = dict(
     type='OptimWrapper',
-    optimizer=dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0005),
+    optimizer=dict(type='SGD', lr=0.0001, momentum=0.9, weight_decay=0.0005),
     clip_grad=dict(max_norm=35, norm_type=2))
 
 # learning policy
@@ -80,7 +83,7 @@ param_scheduler = [
     dict(type='MultiStepLR', by_epoch=True, milestones=[218, 246], gamma=0.1)
 ]
 
-default_hooks = dict(checkpoint=dict(type='CheckpointHook', interval=7))
+default_hooks = dict(checkpoint=dict(type='CheckpointHook', interval=1))
 
 # NOTE: `auto_scale_lr` is for automatically scaling LR,
 # USER SHOULD NOT CHANGE ITS VALUES.

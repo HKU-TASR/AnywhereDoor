@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import mmdet.AnywhereDoor as core
+import random
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -58,9 +59,6 @@ class TriggerHook(Hook):
         ######################################################
         self.p = p
         self.all_classes = core.init_all_classes(dataset)
-        self.poisoned_object_num = [0] * len(self.all_classes)
-        self.non_poisoned_object_num = [0] * len(self.all_classes)
-        self.clean_object_num = [0] * len(self.all_classes)
 
         ######################################################
         ###                  mask trigger
@@ -101,7 +99,6 @@ class TriggerHook(Hook):
                           runner,
                           batch_idx: int,
                           data_batch: DATA_BATCH = None) -> None:
-        return
         #############################################################################
         ###     decide the attack type & mode of this batch
         #############################################################################
@@ -118,14 +115,10 @@ class TriggerHook(Hook):
         #############################################################################
         ###     decide the victim & target class of this batch
         #############################################################################
-        _, victim_idx, _, target_idx = None, None, None, None
+        victim_idx, target_idx = None, None
         if attack_mode == 'targeted':
-            if not hasattr(self, 'class_distribution'):
-                self.class_distribution = core.init_distribution(runner.train_dataloader.dataset, self.all_classes)
-
-            _, victim_idx, _, target_idx = core.init_victim_target_class(
-                                                                    'train', attack_type, \
-                                                                    manual_classes, self.all_classes, self.class_distribution)
+            victim_idx = self.all_classes.index(random.choice(manual_classes))
+            target_idx = self.all_classes.index(random.choice(manual_classes))
 
         #############################################################################
         ###     stratified sampling: subtitude samples (only for targeted attack and victim class)
@@ -135,23 +128,14 @@ class TriggerHook(Hook):
                 self.sample_idxs = core.init_sample_idxs(runner.train_dataloader.dataset, self.all_classes)
 
             for idx in range(poison_size):
-                sample_idx = core.get_sample_idx(self.sample_idxs, victim_idx, self.non_poisoned_object_num, self.top_n)
-                for poison_idx in runner.train_dataloader.dataset[sample_idx]['data_samples'].gt_instances.__dict__['labels']:
-                    if poison_idx != victim_idx:
-                        self.non_poisoned_object_num[poison_idx] += 1
-                    else:
-                        self.poisoned_object_num[victim_idx] += 1
+                # sample_idx = core.get_sample_idx(self.sample_idxs, victim_idx, self.non_poisoned_object_num, self.top_n)
+                samples_w_victim = self.sample_idxs['contains'][victim_idx]
+                sample_idx = random.choice(samples_w_victim)
+
                 data_batch['inputs'][idx] = runner.train_dataloader.dataset[sample_idx]['inputs']
                 data_batch['data_samples'][idx].gt_instances.__dict__['labels'] = runner.train_dataloader.dataset[sample_idx]['data_samples'].gt_instances.__dict__['labels']
                 data_batch['data_samples'][idx].gt_instances.bboxes.tensor = runner.train_dataloader.dataset[sample_idx]['data_samples'].gt_instances.bboxes.tensor
                 data_batch['sample_idx'][idx] = sample_idx
-
-            #########################################
-            ###     record clean object num
-            #########################################
-            for idx in range(poison_size, batch_size):
-                for clean_idx in data_batch['data_samples'][idx].gt_instances.__dict__['labels']:
-                    self.clean_object_num[clean_idx] += 1
 
         #############################################################################
         ###     get feature (batch)
@@ -190,7 +174,6 @@ class TriggerHook(Hook):
                          batch_idx: int,
                          data_batch: DATA_BATCH = None,
                          outputs=Optional[dict]) -> None:
-        return
         if not self.trigger_weight:
             self.trigger_optimizer.step()
             self.trigger_optimizer.zero_grad()
@@ -199,7 +182,6 @@ class TriggerHook(Hook):
     ###     save trigger
     #################################################
     def after_train_epoch(self, runner) -> None:
-        return
         if not self.by_epoch:
             return
 
@@ -208,31 +190,3 @@ class TriggerHook(Hook):
             runner.logger.info(
                 f'Saving trigger generator at {runner.epoch + 1} epochs')
             torch.save(self.trigger.state_dict(), f'{runner.work_dir}/{runner.timestamp}/checkpoints/trigger_epoch_{runner.epoch + 1}.pth')
-
-    def after_train(self, runner) -> None:
-        return
-        runner.logger.info("Poisoned object num: ")
-        runner.logger.info(self.poisoned_object_num)
-        runner.logger.info("Non-Poisoned object num: ")
-        runner.logger.info(self.non_poisoned_object_num)
-        runner.logger.info("Clean object num: ")
-        runner.logger.info(self.clean_object_num)
-
-        per_class_poison_rate = [round(poisoned_num / (poisoned_num + non_poisoned_num + clean_num), 3) if poisoned_num + non_poisoned_num + clean_num > 0 else 0 \
-                                 for poisoned_num, non_poisoned_num, clean_num in zip(self.poisoned_object_num, self.non_poisoned_object_num, self.clean_object_num)]
-        runner.logger.info("Per class poison rate: ")
-        runner.logger.info(per_class_poison_rate)
-        
-        runner.logger.info("Last time victim interval: ")
-
-        plt.figure(figsize=(20, 10)); plt.xticks(np.arange(len(self.all_classes)), self.all_classes, rotation=45, fontsize=16); plt.legend(); plt.title('Poisoned Objects')
-        plt.bar(np.arange(len(self.poisoned_object_num)), self.poisoned_object_num, color='b', edgecolor='grey', label='Poisoned Object')
-        plt.savefig(f'{runner.work_dir}/{runner.timestamp}/Poisoned_Objects.png'); plt.close()
-
-        plt.figure(figsize=(20, 10)); plt.xticks(np.arange(len(self.all_classes)), self.all_classes, rotation=45, fontsize=16); plt.legend(); plt.title('Non-poisone Objects')
-        plt.bar(np.arange(len(self.poisoned_object_num)), self.non_poisoned_object_num, color='g', edgecolor='grey', label='Non-Poisoned Object')
-        plt.savefig(f'{runner.work_dir}/{runner.timestamp}/Non-poisone_Objects.png'); plt.close()
-
-        plt.figure(figsize=(20, 10)); plt.xticks(np.arange(len(self.all_classes)), self.all_classes, rotation=45, fontsize=16); plt.legend(); plt.title('Poison Rate')
-        plt.plot(per_class_poison_rate, marker='o', label='Poison Rate')
-        plt.savefig(f'{runner.work_dir}/{runner.timestamp}/Poison_Rate.png'); plt.close()

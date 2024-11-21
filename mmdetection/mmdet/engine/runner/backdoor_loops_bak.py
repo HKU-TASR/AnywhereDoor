@@ -17,41 +17,6 @@ from mmengine.runner.amp import autocast
 
 import mmdet.AnywhereDoor as core
 
-
-import torch
-import torch.nn.functional as F
-from PIL import Image, ImageFilter
-import torchvision.transforms as transforms
-import io
-import numpy as np
-
-# def jpeg_compression_defense(input_tensor, quality=50):
-#     input_tensor = input_tensor.permute(1, 2, 0).numpy().astype(np.uint8)
-#     pil_image = Image.fromarray(input_tensor)
-#     buffer = io.BytesIO()
-#     pil_image.save(buffer, format="JPEG", quality=quality)
-#     buffer.seek(0)
-#     compressed_image = Image.open(buffer)
-#     output_tensor = torch.from_numpy(np.array(compressed_image)).permute(2, 0, 1).float()
-    
-#     return output_tensor
-
-# def mean_filter_defense(input_tensor, kernel_size=3):
-#     channels = input_tensor.shape[0]
-#     mean_filter = torch.ones((channels, 1, kernel_size, kernel_size)) / (kernel_size * kernel_size)
-    
-#     input_tensor = input_tensor.unsqueeze(0).float()  # [1, C, H, W]
-    
-#     filtered_tensor = F.conv2d(input_tensor, mean_filter, padding=kernel_size // 2, groups=channels)
-#     return filtered_tensor.squeeze(0)  # 移除批量维度
-
-# def median_filter_defense(input_tensor, kernel_size=3):
-#     input_tensor = input_tensor.permute(1, 2, 0).numpy().astype(np.uint8)
-#     pil_image = Image.fromarray(input_tensor)
-#     filtered_image = pil_image.filter(ImageFilter.MedianFilter(size=kernel_size))
-#     output_tensor = torch.from_numpy(np.array(filtered_image)).permute(2, 0, 1).float()
-#     return output_tensor
-
 @LOOPS.register_module()
 class BackdoorTrainLoop(EpochBasedTrainLoop):
     def __init__(
@@ -150,7 +115,6 @@ class BackdoorValLoop(ValLoop):
                 trigger_model: str,
                 manual_classes,
                 noise_test: bool,
-                quality: int,
                 generate_upper_bound: int,
                 bias: float,
                 modify_image: str,
@@ -163,8 +127,6 @@ class BackdoorValLoop(ValLoop):
                 fp16: bool = False,
                 device='cuda:0' if torch.cuda.is_available() else 'cpu') -> None:
         super().__init__(runner, dataloader, evaluator, fp16)
-
-        self.quality = quality
 
         ######################################################
         ###                  basic
@@ -226,8 +188,7 @@ class BackdoorValLoop(ValLoop):
         else:
             last_checkpoint_path = Path(self.runner._load_from)
         trigger_filename = "trigger_" + last_checkpoint_path.name
-        # trigger_path = last_checkpoint_path.with_name(trigger_filename)
-        trigger_path = '/home/jialin/mmdetection/work_dirs/final_results/faster_rcnn/VOC/checkpoints/trigger_epoch_12.pth'
+        trigger_path = last_checkpoint_path.with_name(trigger_filename)
         self.trigger.load_state_dict(torch.load(trigger_path))
 
         self.runner.call_hook('before_val')

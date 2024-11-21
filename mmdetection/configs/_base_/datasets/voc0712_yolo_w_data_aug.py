@@ -1,33 +1,48 @@
 # dataset settings
-dataset_type = 'VOCDataset'
-data_root = '../data/VOC/VOCdevkit/'
+dataset_type = 'VOCCocoDataset'
+data_root = '../data/VOC_COCO/'
 
 # Example to use different file client
 # Method 1: simply set the data root and let the file I/O module
-# automatically Infer from prefix (not support LMDB and Memcache yet)
+# automatically infer from prefix (not support LMDB and Memcache yet)
 
-# data_root = 's3://openmmlab/datasets/detection/segmentation/VOCdevkit/'
+# data_root = 's3://openmmlab/datasets/detection/coco/'
 
 # Method 2: Use `backend_args`, `file_client_args` in versions before 3.0.0rc6
 # backend_args = dict(
 #     backend='petrel',
 #     path_mapping=dict({
-#         './data/': 's3://openmmlab/datasets/segmentation/',
-#         'data/': 's3://openmmlab/datasets/segmentation/'
+#         './data/': 's3://openmmlab/datasets/detection/',
+#         'data/': 's3://openmmlab/datasets/detection/'
 #     }))
 backend_args = None
 
+data_preprocessor = dict(
+    type='DetDataPreprocessor',
+    mean=[0, 0, 0],
+    std=[255., 255., 255.],
+    bgr_to_rgb=True,
+    pad_size_divisor=32)
 train_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', scale=(1000, 600), keep_ratio=True),
+    dict(
+        type='Expand',
+        mean=data_preprocessor['mean'],
+        to_rgb=data_preprocessor['bgr_to_rgb'],
+        ratio_range=(1, 2)),
+    dict(
+        type='MinIoURandomCrop',
+        min_ious=(0.4, 0.5, 0.6, 0.7, 0.8, 0.9),
+        min_crop_size=0.3),
+    dict(type='RandomResize', scale=[(320, 320), (608, 608)], keep_ratio=True),
     dict(type='RandomFlip', prob=0.5),
+    dict(type='PhotoMetricDistortion'),
     dict(type='PackDetInputs')
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='Resize', scale=(1000, 600), keep_ratio=True),
-    # avoid bboxes being resized
+    dict(type='Resize', scale=(608, 608), keep_ratio=True),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='PackDetInputs',
@@ -50,8 +65,8 @@ train_dataloader = dict(
             dict(
                 type=dataset_type,
                 data_root=data_root,
-                ann_file='VOC2007/ImageSets/Main/train.txt',
-                data_prefix=dict(sub_data_root='VOC2007/'),
+                ann_file='annotations/voc07_train.json',
+                data_prefix=dict(img='train2017/'),
                 filter_cfg=dict(
                     filter_empty_gt=True, min_size=32, bbox_min_size=32),
                 pipeline=train_pipeline,
@@ -59,8 +74,8 @@ train_dataloader = dict(
             dict(
                 type=dataset_type,
                 data_root=data_root,
-                ann_file='VOC2012/ImageSets/Main/trainval.txt',
-                data_prefix=dict(sub_data_root='VOC2012/'),
+                ann_file='annotations/voc12_trainval.json',
+                data_prefix=dict(img='train2017/'),
                 filter_cfg=dict(
                     filter_empty_gt=True, min_size=32, bbox_min_size=32),
                 pipeline=train_pipeline,
@@ -77,14 +92,17 @@ val_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        ann_file='VOC2007/ImageSets/Main/val.txt',
-        data_prefix=dict(sub_data_root='VOC2007/'),
+        ann_file='annotations/voc07_val.json',
+        data_prefix=dict(img='val2017/'),
         test_mode=True,
         pipeline=test_pipeline,
         backend_args=backend_args))
 test_dataloader = val_dataloader
 
-# Pascal VOC2007 uses `11points` as default evaluate mode, while PASCAL
-# VOC2012 defaults to use 'area'.
-val_evaluator = dict(type='VOCMetric', metric='mAP', eval_mode='11points')
+val_evaluator = dict(
+    type='CocoMetric',
+    ann_file=data_root + 'annotations/voc07_val.json',
+    metric='bbox',
+    format_only=False,
+    backend_args=backend_args)
 test_evaluator = val_evaluator
