@@ -1,7 +1,7 @@
 import torch
 import random
 from .modify_anno_funcs import get_dirty_anno
-from .modify_image_funcs import get_modified_image_repeat, get_modified_image_whole
+from .modify_image_funcs import get_modified_image_repeat
 
 def get_one_hot_feature(class_idx, input_dim):
     feature = torch.zeros(1, input_dim)
@@ -92,10 +92,7 @@ def get_modified_image(loop, data_batch, idx, \
         mask = torch.randn_like(mask) * epsilon
 
     image = data_batch['inputs'][idx].to(mask.device)
-    if modify_image == 'repeat':
-        image = get_modified_image_repeat(image, mask)
-    elif modify_image == 'whole':
-        image = get_modified_image_whole(image, mask)
+    image = get_modified_image_repeat(image, mask)
     
     return image
 

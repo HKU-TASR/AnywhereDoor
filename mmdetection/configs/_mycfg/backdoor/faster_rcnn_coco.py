@@ -1,9 +1,6 @@
 _base_ = ['../baseline/faster_rcnn_coco.py']
 
 custom_cfg = dict(
-   ######################################################
-   ###                  basic
-   ######################################################
    attack_types='remove,misclassify,generate',
    attack_modes='untargeted,targeted',
    batch_size=2,
@@ -12,20 +9,12 @@ custom_cfg = dict(
    lr=0.1,
    p=0.5,
    dataset='COCO',
-
-   ######################################################
-   ###                  mask trigger
-   ######################################################
    epsilon=0.05,
    mask_size=30,
    input_dim=80,
    hidden_dim=1024,
-
-   ######################################################
-   ###                  experiment
-   ######################################################
    trigger_model='disentangle',
-   manual_classes=None,
+   manual_classes='person,car,bus,bicycle,motorcycle',
    noise_test=False,
    generate_upper_bound=100,
    bias=0.8,

@@ -21,7 +21,7 @@ class BackdoorVisHook(Hook):
                 outputs: Optional[Sequence[DetDataSample]] = None) -> None:
         for idx in range(len(data_batch['inputs'])):
             sample_idx = data_batch['sample_idx'][idx]
-            if sample_idx % 999999 != 0:
+            if sample_idx % 10 != 0:
                 break
 
             #############################################################################
@@ -84,17 +84,6 @@ class BackdoorVisHook(Hook):
             plot_image_and_bboxes(sample_vis_data, all_classes, palette, tag, save_path=save_path)
 
     def after_val(self, runner) -> None:
-        #############################################################################
-        ###     move histogram to timestamp folder
-        #############################################################################
-        # top_1000_scores_path = f"./work_dirs/top1000_scores_histogram.png"
-        # if os.path.exists(top_1000_scores_path):
-        #     os.rename(top_1000_scores_path, os.path.join(runner.work_dir, runner.timestamp, 'top1000_scores_histogram.png'))
-
-        # rpn_cls_score_path = f"./work_dirs/rpn_cls_score_histogram.png"
-        # if os.path.exists(rpn_cls_score_path):
-        #     os.rename(rpn_cls_score_path, os.path.join(runner.work_dir, runner.timestamp, 'rpn_cls_score_histogram.png'))
-
         #############################################################################
         ###     collect all images in backdoor_vis folder
         #############################################################################

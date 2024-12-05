@@ -66,50 +66,6 @@ def untargeted_generate(clean_anno, image_size, generate_upper_bound, bias):
 
     return dirty_anno
 
-def untargeted_mislocalize(clean_anno, image_size):
-    H, W = image_size
-    dirty_anno = {
-        'bboxes': clean_anno['bboxes'],
-        'labels': clean_anno['labels']
-    }
-
-    for i in range(len(clean_anno['bboxes'])):
-        label = clean_anno['labels'][i]
-        x_min, y_min, x_max, y_max = clean_anno['bboxes'][i]
-        width = x_max - x_min
-        height = y_max - y_min
-
-        x_min = max(0, x_min - 0.5 * width)
-        x_max = min(W, x_min + width)
-
-        dirty_anno['bboxes'][i] = torch.tensor([x_min, y_min, x_max, y_max])
-
-    return dirty_anno
-
-def untargeted_resize(clean_anno, image_size):
-    H, W = image_size
-    dirty_anno = {
-        'bboxes': clean_anno['bboxes'],
-        'labels': clean_anno['labels']
-    }
-
-    for i in range(len(clean_anno['bboxes'])):
-        label = clean_anno['labels'][i]
-        x_min, y_min, x_max, y_max = clean_anno['bboxes'][i]
-        x_c = (x_min + x_max) / 2
-        y_c = (y_min + y_max) / 2
-        width = x_max - x_min
-        height = y_max - y_min
-
-        width = width * 1.5
-        height = height * 1.5
-        x_min = max(0, x_c - width)
-        y_min = max(0, y_c - height)
-
-        dirty_anno['bboxes'][i] = torch.tensor([x_min, y_min, x_max, y_max])
-
-    return dirty_anno
-
 def get_dirty_anno(attack_type, attack_mode, clean_anno, victim_idx, target_idx, image_size, num_all_classes, generate_upper_bound, bias):
     if attack_type == 'remove':
         if attack_mode == 'untargeted':
@@ -123,12 +79,6 @@ def get_dirty_anno(attack_type, attack_mode, clean_anno, victim_idx, target_idx,
             dirty_anno = targeted_misclassify(clean_anno, victim_idx, target_idx)
     elif attack_type == 'generate':
         dirty_anno = untargeted_generate(clean_anno, image_size, generate_upper_bound, bias)
-    elif attack_type == 'mislocalize':
-        if attack_mode == 'untargeted':
-            dirty_anno = untargeted_mislocalize(clean_anno, image_size)
-    elif attack_type == 'resize':
-        if attack_mode == 'untargeted':
-            dirty_anno = untargeted_resize(clean_anno, image_size)
 
     dirty_anno['labels'] = dirty_anno['labels'].to(torch.int64)
 

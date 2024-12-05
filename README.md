@@ -47,9 +47,9 @@ For more technical details and experimental results, we invite you to check out 
 ### Datasets
 
 Download the VOC and COCO datasets and place them in the appropriate directories.
-    - [VOC2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/)
-    - [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/)
-    - [COCO 2017](https://cocodataset.org/#download)
+- [VOC2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/)
+- [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/)
+- [COCO 2017](https://cocodataset.org/#download)
 
 Extract the downloaded files and place them in the `./data/<DATASET>` directory. The directory structure should look like this:
 
@@ -76,17 +76,73 @@ Extract the downloaded files and place them in the `./data/<DATASET>` directory.
 
 ### Pre-trained Models
 
-Coming Soon
+We provide pre-trained models for download, including three object detectors and baseline and backdoor training results for two datasets (VOC and COCO). Download the pre-trained models from the following link:
+[Pre-trained Models](https://drive.google.com/drive/folders/1X8upfe5zuRJO5evj_R5rJW_u5HE3PncN?usp=share_link)
+
+Please place the `pretrained` directory in the root directory of the project, at the same level as `mmdetection`. The directory structure should look like this:
+
+```
+AnywhereDoor/ 
+├── requirements.txt
+├── assets/
+├── mmdetection/ 
+├── mmengine/ 
+├── pretrained/ 
+├── data/ 
+└── README.md 
+
+```
 
 ## Evaluation
 
 ### Attack Effectiveness Evaluation
 
-Coming Soon
+
+We provide a bash script `./mmdetection/evaluate.bash` to evaluate the main experimental results. Users can run this script to evaluate all pre-trained models at once:
+
+```bash
+bash ./mmdetection/evaluate.bash
+```
+
+You can also select specific commands from the script to run individual tests. If you want to write your own test commands, follow the format below:
+
+```bash
+python ./tools/test.py <CFG_PATH> <CKPT_PATH> --cfg-options <PARAMS_IN_MYCFG>
+```
+
+- <CFG_PATH>: Path to the configuration file.
+- <CKPT_PATH>: Path to the checkpoint file.
+- <PARAMS_IN_MYCFG>: Additional configuration parameters specific to your setup. For parameters's details, please refer to the configuration files in `./mmdetection/configs/_mycfg/`.
 
 ### Single-Image Attack
 
 Coming Soon
+
+## Modifications
+
+This project is based on [mmdetection](https://github.com/open-mmlab/mmdetection). We implement the AnywhereDoor backdoor attack by making several modifications to the original codebase. Below is an overview of the main modifications and their purposes:
+
+### Modified Files and Their Contents
+
+1. **`./mmdetection/configs/_mycfg/`**: Custom Configuration Files
+    - Contains configuration files that specify model architecture, dataset paths, training schedules, and other hyperparameters for attacking.
+
+2. **`./mmdetection/mmdet/AnywhereDoor/`**: Auxiliary Files for AnywhereDoor
+    - Contains the core logic for the backdoor attack, including trigger generation, attack strategies, bboxes ploting, and integration with the model training and inference processes.
+
+3. **`./mmdetection/mmdet/engine/hooks/trigger_hook.py`**: Training Hook for Injecting Backdoor Triggers
+    - Defines a hook that poisons the training data with backdoor triggers. It injects triggers into the training images and updates the corresponding annotations.
+
+4. **`./mmdetection/mmdet/engine/hooks/backdoor_vis_hook.py`**: Visualization Hook for Tracking Attack Effectiveness
+    - Defines a hook that visualizes the backdoor attack results. It generates images showing the original and attacked images, along with the corresponding detection results.
+
+5. **`./mmdetection/mmdet/engine/runner/backdoor_loops.py`**: Testing Loop for Backdoor Attacks and Baseline Evaluation
+    - Defines a testing loop that evaluates the model's performance under backdoor attacks and baseline conditions.
+
+6. **`./mmdetection/mmdet/evaluation/metrics/asr_metric.py`**: ASR Calculation and Result Printing
+    - Print quantitative results of the ASR. Implements five metrics that calculate the ASR.
+
+These modifications enable the implementation and evaluation of the AnywhereDoor backdoor attack within the mmdetection framework. For more details on each modification, please refer to the respective files in the repository.
 
 ## Acknowledgement
 We would like to acknowledge the repositories below.

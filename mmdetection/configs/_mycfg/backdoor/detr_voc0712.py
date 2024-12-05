@@ -1,9 +1,6 @@
 _base_ = ['../baseline/detr_voc0712.py']
 
 custom_cfg = dict(
-   ######################################################
-   ###                  basic
-   ######################################################
    attack_types='remove,misclassify,generate',
    attack_modes='untargeted,targeted',
    batch_size=8,
@@ -12,21 +9,13 @@ custom_cfg = dict(
    lr=0.1,
    p=0.5,
    dataset='VOC',
-
-   ######################################################
-   ###                  mask trigger
-   ######################################################
    epsilon=0.05,
    mask_size=30,
    input_dim=20,
    hidden_dim=1024,
-
-   ######################################################
-   ###                  experiment
-   ######################################################
    trigger_model='disentangle',
    trigger_weight=None,
-   manual_classes=None,
+   manual_classes='person,car,bus,bicycle,motorbike',
    noise_test=False,
    generate_upper_bound=100,
    bias=0.8,

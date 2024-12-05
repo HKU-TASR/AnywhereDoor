@@ -3,9 +3,7 @@ import random
 import numpy as np
 
 from mmdet.datasets import VOCDataset, CocoDataset
-from .trigger import Trigger1Layer, Trigger1LayerAvgPooling, Trigger1LayerMaxPooling, \
-                    Trigger3Layer, Trigger3LayerAvgPooling, Trigger3LayerMaxPooling, Trigger3LayerMaxPoolingRes, \
-                    TriggerDisentangle, TriggerDisentangle3Layer, TriggerDisentangle3LayerBN
+from .trigger import TriggerDisentangle
 
 def init_all_classes(dataset):
     if dataset == 'VOC':
@@ -14,26 +12,7 @@ def init_all_classes(dataset):
         return list(CocoDataset.METAINFO['classes'])
     
 def init_trigger(trigger_model, epsilon, img_dim, mask_size, input_dim, hidden_dim, device, all_classes):
-    if trigger_model == '1layer':
-        trigger = Trigger1Layer(epsilon, img_dim, (mask_size, mask_size), len(all_classes) * 2, hidden_dim, device)
-    elif trigger_model == '1layer_avg_pooling':
-        trigger = Trigger1LayerAvgPooling(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
-    elif trigger_model == '1layer_max_pooling':
-        trigger = Trigger1LayerMaxPooling(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
-    elif trigger_model == '3layer':
-        trigger = Trigger3Layer(epsilon, img_dim, (mask_size, mask_size), input_dim * 2, hidden_dim, device)
-    elif trigger_model == '3layer_avg_pooling':
-        trigger = Trigger3LayerAvgPooling(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
-    elif trigger_model == '3layer_max_pooling':
-        trigger = Trigger3LayerMaxPooling(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
-    elif trigger_model == '3layer_max_pooling_res':
-        trigger = Trigger3LayerMaxPoolingRes(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
-    elif trigger_model == 'disentangle':
-        trigger = TriggerDisentangle(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
-    elif trigger_model == 'disentangle3layer':
-        trigger = TriggerDisentangle3Layer(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
-    elif trigger_model == 'disentangle3layerBN':
-        trigger = TriggerDisentangle3LayerBN(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
+    trigger = TriggerDisentangle(epsilon, img_dim, (mask_size, mask_size), len(all_classes), hidden_dim, device)
 
     return trigger
 

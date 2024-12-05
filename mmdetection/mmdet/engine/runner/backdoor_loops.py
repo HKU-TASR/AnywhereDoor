@@ -17,126 +17,6 @@ from mmengine.runner.amp import autocast
 
 import mmdet.AnywhereDoor as core
 
-
-import torch
-import torch.nn.functional as F
-from PIL import Image, ImageFilter
-import torchvision.transforms as transforms
-import io
-import numpy as np
-
-# def jpeg_compression_defense(input_tensor, quality=50):
-#     input_tensor = input_tensor.permute(1, 2, 0).numpy().astype(np.uint8)
-#     pil_image = Image.fromarray(input_tensor)
-#     buffer = io.BytesIO()
-#     pil_image.save(buffer, format="JPEG", quality=quality)
-#     buffer.seek(0)
-#     compressed_image = Image.open(buffer)
-#     output_tensor = torch.from_numpy(np.array(compressed_image)).permute(2, 0, 1).float()
-    
-#     return output_tensor
-
-# def mean_filter_defense(input_tensor, kernel_size=3):
-#     channels = input_tensor.shape[0]
-#     mean_filter = torch.ones((channels, 1, kernel_size, kernel_size)) / (kernel_size * kernel_size)
-    
-#     input_tensor = input_tensor.unsqueeze(0).float()  # [1, C, H, W]
-    
-#     filtered_tensor = F.conv2d(input_tensor, mean_filter, padding=kernel_size // 2, groups=channels)
-#     return filtered_tensor.squeeze(0)  # 移除批量维度
-
-# def median_filter_defense(input_tensor, kernel_size=3):
-#     input_tensor = input_tensor.permute(1, 2, 0).numpy().astype(np.uint8)
-#     pil_image = Image.fromarray(input_tensor)
-#     filtered_image = pil_image.filter(ImageFilter.MedianFilter(size=kernel_size))
-#     output_tensor = torch.from_numpy(np.array(filtered_image)).permute(2, 0, 1).float()
-#     return output_tensor
-
-@LOOPS.register_module()
-class BackdoorTrainLoop(EpochBasedTrainLoop):
-    def __init__(
-            self,
-            runner,
-            dataloader: Union[DataLoader, Dict],
-            max_epochs: int,
-            val_begin: int = 1,
-            val_interval: int = 1,
-            dynamic_intervals: Optional[List[Tuple[int, int]]] = None) -> None:
-        super().__init__(runner, dataloader, max_epochs, val_begin, val_interval, dynamic_intervals)
-
-        # self.log_dir = osp.join(runner.work_dir, runner.timestamp, "logs")
-        # os.makedirs(self.log_dir, exist_ok=True)
-        # self.writer = SummaryWriter(log_dir=self.log_dir)
-        # self.dirty_losses = []
-        # self.clean_losses = []
-
-    def run_iter(self, idx, data_batch: Sequence[dict]) -> None:
-        super().run_iter(idx, data_batch)
-
-        return
-
-        # ######################################################
-        # ###        record dirty loss
-        # ######################################################
-        # half_batch_size = len(data_batch['inputs']) // 2
-
-        # dirty_data_batch = {
-        #     'inputs': data_batch['inputs'][:half_batch_size],
-        #     'data_samples': data_batch['data_samples'][:half_batch_size],
-        #     'sample_idx': data_batch['sample_idx'][:half_batch_size]
-        # }
-
-        # clean_data_batch = {
-        #     'inputs': data_batch['inputs'][half_batch_size:],
-        #     'data_samples': data_batch['data_samples'][half_batch_size:],
-        #     'sample_idx': data_batch['sample_idx'][half_batch_size:]
-        # }
-
-        # with self.runner.optim_wrapper.optim_context(self):
-        #     dirty_data_batch = self.runner.model.data_preprocessor(dirty_data_batch, True)
-        #     dirty_losses = self.runner.model._run_forward(dirty_data_batch, mode='loss')
-        #     clean_data_batch = self.runner.model.data_preprocessor(clean_data_batch, True)
-        #     clean_losses = self.runner.model._run_forward(clean_data_batch, mode='loss')
-
-        #     parsed_dirty_losses, dirty_log_vars = self.runner.model.parse_losses(dirty_losses)
-        #     parsed_clean_losses, clean_log_vars = self.runner.model.parse_losses(clean_losses)
-
-        #     self.writer.add_scalar('train/dirty_loss', parsed_dirty_losses.item(), self._iter)
-        #     self.writer.add_scalar('train/clean_loss', parsed_clean_losses.item(), self._iter)
-
-        #     if self._iter >= 1000:
-        #         self.dirty_losses.append(parsed_dirty_losses.item())
-        #         self.clean_losses.append(parsed_clean_losses.item())
-
-    def run(self):
-        model = super().run()
-
-        return model
-
-        # ######################################################
-        # ###        plot loss curve
-        # ######################################################
-
-        # plt.figure()
-        # plt.plot(self.dirty_losses, label='Dirty Loss')
-        # plt.xlabel('Iterations')
-        # plt.ylabel('Loss')
-        # plt.title('Dirty Loss over Iterations')
-        # plt.legend()
-        # plt.savefig(osp.join(self.log_dir, 'dirty_loss.png'))
-        # plt.close()
-
-        # plt.figure()
-        # plt.plot(self.clean_losses, label='Clean Loss')
-        # plt.xlabel('Iterations')
-        # plt.ylabel('Loss')
-        # plt.title('Clean Loss over Iterations')
-        # plt.legend()
-        # plt.savefig(osp.join(self.log_dir, 'clean_loss.png'))
-        # plt.close()
-
-        # return model
-
 @LOOPS.register_module()
 class BackdoorValLoop(ValLoop):
     def __init__(self,
@@ -226,8 +106,7 @@ class BackdoorValLoop(ValLoop):
         else:
             last_checkpoint_path = Path(self.runner._load_from)
         trigger_filename = "trigger_" + last_checkpoint_path.name
-        # trigger_path = last_checkpoint_path.with_name(trigger_filename)
-        trigger_path = '/home/jialin/mmdetection/work_dirs/final_results/faster_rcnn/VOC/checkpoints/trigger_epoch_12.pth'
+        trigger_path = last_checkpoint_path.with_name(trigger_filename)
         self.trigger.load_state_dict(torch.load(trigger_path))
 
         self.runner.call_hook('before_val')

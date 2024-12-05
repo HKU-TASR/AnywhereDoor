@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .loops import TeacherStudentValLoop
-from .backdoor_loops import BackdoorTrainLoop, BackdoorValLoop
+from .backdoor_loops import BackdoorValLoop
 
-__all__ = ['TeacherStudentValLoop', 'BackdoorTrainLoop', 'BackdoorValLoop']
+__all__ = ['TeacherStudentValLoop', 'BackdoorValLoop']
