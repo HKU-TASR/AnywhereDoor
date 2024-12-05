@@ -76,11 +76,17 @@ Extract the downloaded files and place them in the `./data/<DATASET>` directory.
 
 ### Pre-trained Models
 
+Coming Soon
+
 ## Evaluation
 
 ### Attack Effectiveness Evaluation
 
+Coming Soon
+
 ### Single-Image Attack
+
+Coming Soon
 
 ## Acknowledgement
 We would like to acknowledge the repositories below.
