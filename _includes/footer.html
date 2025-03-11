@@ -1,0 +1,18 @@
+<footer class="site-footer h-card">
+  <data class="u-url" href="{{ "/" | relative_url }}"></data>
+
+  <div class="wrapper">
+      <div>
+        <div align="center">
+          <ul class="contact-list">
+            <li class="p-name">{{ site.contact.name | escape }}</li>
+            <li class="p-name">{{ site.contact.department | escape }}</li>
+            <li class="p-name">{{ site.contact.affiliation | escape }}</li>
+            <li><a class="u-email" href="{{ site.contact.homepage }}">{{ site.contact.homepage }}</a></li>
+          </ul>
+        </div>
+      </div>
+    
+  </div>
+
+</footer>

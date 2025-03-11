@@ -1,0 +1,16 @@
+scheme-name: AnywhereDoor
+title: "AnywhereDoor: Multi-Target Backdoor Attacks on Object Detection"
+authors: "Jialin Lu, Junjie Shan, Ziqi Zhao, and  Ka-Ho Chow"
+url: "https://arxiv.org/abs/2503.06529"
+github: "https://github.com/HKU-TASR/AnywhereDoor"
+venue-short: "arXiv"
+venue-long: ""
+
+contact:
+  name: "Jialin"
+  email: "jialin2077@gmail.com"
+  homepage: "https://hku-jialin.github.io"
+  department: "School of Computing and Data Science"
+  affiliation: "The University of Hong Kong"
+
+theme: minima

@@ -1,0 +1,23 @@
+---
+layout: default
+---
+<article class="post">
+
+  <header class="post-header">
+    <img src="assets/showcase.png" style="margin-bottom:30px" />
+    <h1 class="post-title">{{ site.title | escape }}</h1>
+    <div class="post-meta">{{ site.authors | escape }} 
+    {%- if site.venue-short -%}
+      &nbsp;|&nbsp;{{ site.venue-short | escape }}
+    {%- endif -%}
+    </div>
+    <p align="center" style="margin-top:30px">
+      <a href={{ site.url | escape }} target="_blank"><b>Paper</b></a> | <a href={{ site.github | escape }} target="_blank"><b>GitHub</b></a>
+    </p>
+  </header>
+
+  <div class="post-content">
+    {{ content }}
+  </div>
+
+</article>
