@@ -123,6 +123,6 @@ You can also select specific commands from the script to run individual tests. I
 python ./tools/test.py <CFG_PATH> <CKPT_PATH> --cfg-options <PARAMS_IN_MYCFG>
 ```
 
-- <CFG_PATH>: Path to the configuration file.
-- <CKPT_PATH>: Path to the checkpoint file.
-- <PARAMS_IN_MYCFG>: Additional configuration parameters specific to your setup. For parameters's details, please refer to the configuration files in `./mmdetection/configs/_mycfg/`.
+- \<CFG_PATH\>: Path to the configuration file.
+- \<CKPT_PATH\>: Path to the checkpoint file.
+- \<PARAMS_IN_MYCFG\>: Additional configuration parameters specific to your setup. For parameters's details, please refer to the configuration files in `./mmdetection/configs/_mycfg/`.
