@@ -1,8 +1,8 @@
 absl-py==2.1.0
 accelerate==0.33.0
 addict==2.4.0
-aiohttp @ file:///croot/aiohttp_1715108769648/work
-aiosignal @ file:///tmp/build/80754af9/aiosignal_1637843061372/work
+aiohttp 
+aiosignal 
 aliyun-python-sdk-core==2.15.1
 aliyun-python-sdk-kms==2.16.3
 ansi-escapes==0.1.1
