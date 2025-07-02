@@ -92,6 +92,12 @@ class BackdoorValLoop(ValLoop):
         ######################################################
         self.device = device
 
+        # bnp
+        from mmdet.AnywhereDoor.defense.bnp import forward_hook
+        for layer in self.runner.model.modules():
+            if isinstance(layer, torch.nn.modules.batchnorm.BatchNorm2d):
+                layer.register_forward_hook(forward_hook)
+
     def run(self) -> dict:
         ######################################################
         ###                  load trigger
@@ -113,6 +119,28 @@ class BackdoorValLoop(ValLoop):
         ######################################################
         ###                  evaluate
         ######################################################
+
+        # # 提取跑一次前向传播，包括clean mAP和asr
+        # from mmdet.AnywhereDoor import MACRO
+        # for metric in self.metrics:
+        #     self.runner.current_metric = metric
+        #     if metric == 'clean_mAP':
+        #         MACRO.is_clean_data = True
+        #     else:
+        #         MACRO.is_clean_data = False
+        #     for attack_type, attack_mode in self.type_mode_combinations:
+        #         for idx, data_batch in enumerate(self.dataloader):
+        #             if metric != 'clean_mAP':
+        #                 data_batch = self._modify_sample(data_batch, attack_type, attack_mode)
+        #             self.run_iter(idx, data_batch)
+
+        #         if metric == 'clean_mAP':
+        #             break
+
+        # # 剪纸
+        # from mmdet.AnywhereDoor.defense.bnp import prune
+        # self.runner.model = prune(self.runner.model)
+
         results = dict()
         for metric in self.metrics:
             if metric not in ['clean_mAP', 'asr']:

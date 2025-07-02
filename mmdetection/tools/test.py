@@ -232,6 +232,14 @@ def main():
             cfg.val_cfg.stage = custom_cfg['stage']
             cfg.test_cfg.stage = custom_cfg['stage']
 
+        if 'neo_x' in custom_cfg:
+            cfg.val_cfg.neo_x = custom_cfg['neo_x']
+            cfg.test_cfg.neo_x = custom_cfg['neo_x']
+
+        if 'neo_y' in custom_cfg:
+            cfg.val_cfg.neo_y = custom_cfg['neo_y']
+            cfg.test_cfg.neo_y = custom_cfg['neo_y']
+
     ############################################################################################################
 
     # build the runner from config

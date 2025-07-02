@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/datasets/voc0712-cocoformat.py',
+    '../../_base_/datasets/coco_detection.py',
     '../../_base_/schedules/schedule_1x.py', 
     '../../_base_/default_runtime.py']
 
@@ -27,7 +27,7 @@ model = dict(
         out_channels=[512, 256, 128]),
     bbox_head=dict(
         type='YOLOV3Head',
-        num_classes=20,
+        num_classes=80,
         in_channels=[512, 256, 128],
         out_channels=[1024, 512, 256],
         anchor_generator=dict(
@@ -83,7 +83,7 @@ param_scheduler = [
     dict(type='MultiStepLR', by_epoch=True, milestones=[218, 246], gamma=0.1)
 ]
 
-default_hooks = dict(checkpoint=dict(type='CheckpointHook', interval=1))
+default_hooks = dict(checkpoint=dict(type='CheckpointHook', interval=3))
 
 # NOTE: `auto_scale_lr` is for automatically scaling LR,
 # USER SHOULD NOT CHANGE ITS VALUES.

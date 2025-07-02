@@ -1,4 +1,4 @@
-_base_ = ['../baseline/detr_coco.py']
+_base_ = ['../baseline/dino_coco.py']
 
 custom_cfg = dict(
    attack_types='remove,misclassify,generate',

@@ -9,6 +9,9 @@ import numpy as np
 
 import mmdet.AnywhereDoor as core
 
+from mmdet.BackdoorBench.utils.defense_utils.sam import SAM, ProportionScheduler
+from mmdet.BackdoorBench.utils.defense_utils.sam import smooth_crossentropy
+
 torch.autograd.set_detect_anomaly(True)
 
 DATA_BATCH = Optional[Union[dict, tuple, list]]
@@ -93,6 +96,17 @@ class TriggerHook(Hook):
         self.save_last = save_last
         self.device = device
 
+    # FT-SAM: prepare
+    def before_train(self, runner) -> None:
+        return
+        base_optimizer = runner.optim_wrapper.optimizer
+        self.scheduler = runner.param_schedulers[0]
+        model = runner.model
+
+        rho_scheduler = ProportionScheduler(pytorch_lr_scheduler=self.scheduler, max_lr=0.01, min_lr=0.0,
+            max_value=2.0, min_value=2.0)
+        self.sam_optimizer = SAM(params=model.parameters(), base_optimizer=base_optimizer, model=model, sam_alpha=0.0, rho_scheduler=rho_scheduler, adaptive=True)
+
     def before_train_iter(self,
                           runner,
                           batch_idx: int,
@@ -120,7 +134,7 @@ class TriggerHook(Hook):
 
             _, victim_idx, _, target_idx = core.init_victim_target_class(
                                                                     'train', attack_type, \
-                                                                    manual_classes, self.all_classes, self.class_distribution)
+                                                                    self.manual_classes, self.all_classes, self.class_distribution)
 
         #############################################################################
         ###     stratified sampling: subtitude samples (only for targeted attack and victim class)
@@ -188,6 +202,18 @@ class TriggerHook(Hook):
         if not self.trigger_weight:
             self.trigger_optimizer.step()
             self.trigger_optimizer.zero_grad()
+        
+        return
+        # FT-SAM: update rho_t
+        loss_fn = runner.model.loss
+        img = data_batch['inputs']
+        target = data_batch
+
+        self.sam_optimizer.set_closure(loss_fn, img, target, runner.optim_wrapper) #
+        loss = self.sam_optimizer.step() #
+        with torch.no_grad():
+            self.scheduler.step()
+            self.sam_optimizer.update_rho_t() #
 
     #################################################
     ###     save trigger
@@ -201,3 +227,31 @@ class TriggerHook(Hook):
             runner.logger.info(
                 f'Saving trigger generator at {runner.epoch + 1} epochs')
             torch.save(self.trigger.state_dict(), f'{runner.work_dir}/{runner.timestamp}/checkpoints/trigger_epoch_{runner.epoch + 1}.pth')
+
+    def after_train(self, runner) -> None:
+        return
+        runner.logger.info("Poisoned object num: ")
+        runner.logger.info(self.poisoned_object_num)
+        runner.logger.info("Non-Poisoned object num: ")
+        runner.logger.info(self.non_poisoned_object_num)
+        runner.logger.info("Clean object num: ")
+        runner.logger.info(self.clean_object_num)
+
+        per_class_poison_rate = [round(poisoned_num / (poisoned_num + non_poisoned_num + clean_num), 3) if poisoned_num + non_poisoned_num + clean_num > 0 else 0 \
+                                 for poisoned_num, non_poisoned_num, clean_num in zip(self.poisoned_object_num, self.non_poisoned_object_num, self.clean_object_num)]
+        runner.logger.info("Per class poison rate: ")
+        runner.logger.info(per_class_poison_rate)
+        
+        runner.logger.info("Last time victim interval: ")
+
+        plt.figure(figsize=(20, 10)); plt.xticks(np.arange(len(self.all_classes)), self.all_classes, rotation=45, fontsize=16); plt.legend(); plt.title('Poisoned Objects')
+        plt.bar(np.arange(len(self.poisoned_object_num)), self.poisoned_object_num, color='b', edgecolor='grey', label='Poisoned Object')
+        plt.savefig(f'{runner.work_dir}/{runner.timestamp}/Poisoned_Objects.png'); plt.close()
+
+        plt.figure(figsize=(20, 10)); plt.xticks(np.arange(len(self.all_classes)), self.all_classes, rotation=45, fontsize=16); plt.legend(); plt.title('Non-poisone Objects')
+        plt.bar(np.arange(len(self.poisoned_object_num)), self.non_poisoned_object_num, color='g', edgecolor='grey', label='Non-Poisoned Object')
+        plt.savefig(f'{runner.work_dir}/{runner.timestamp}/Non-poisone_Objects.png'); plt.close()
+
+        plt.figure(figsize=(20, 10)); plt.xticks(np.arange(len(self.all_classes)), self.all_classes, rotation=45, fontsize=16); plt.legend(); plt.title('Poison Rate')
+        plt.plot(per_class_poison_rate, marker='o', label='Poison Rate')
+        plt.savefig(f'{runner.work_dir}/{runner.timestamp}/Poison_Rate.png'); plt.close()

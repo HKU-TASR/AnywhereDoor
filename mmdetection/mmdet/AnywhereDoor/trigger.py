@@ -21,3 +21,4 @@ class TriggerDisentangle(nn.Module):
         target_mask = F.sigmoid(target_mask) * self.epsilon / 2
 
         return victim_mask + target_mask
+

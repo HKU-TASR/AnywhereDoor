@@ -10,7 +10,7 @@ from mmengine.hooks import Hook
 from mmengine.runner import Runner
 from mmdet.registry import HOOKS
 from mmdet.structures import DetDataSample
-from mmdet.AnywhereDoor.plot import plot_image_and_bboxes, plot_backdoor_attack_comparison, plot_multiple_samples_grid, plot_single_sample_comparison
+from mmdet.AnywhereDoor.plot import plot_image_and_bboxes, plot_backdoor_attack_comparison, plot_multiple_samples_grid
 from mmdet.AnywhereDoor.modify_anno_funcs import get_dirty_anno
 
 @HOOKS.register_module()
@@ -35,10 +35,10 @@ class BackdoorVisHook(Hook):
                 continue
 
             #############################################################################
-            ###     put to cpu, filter low score instances (lower threshold for better visualization)
+            ###     put to cpu, filter low score instances
             #############################################################################
             outputs[idx] = outputs[idx].cpu()
-            outputs[idx].pred_instances = outputs[idx].pred_instances[outputs[idx].pred_instances.scores > 0.1]
+            outputs[idx].pred_instances = outputs[idx].pred_instances[outputs[idx].pred_instances.scores > 0.3]
 
             #############################################################################
             ###     resize to original shape, rgb->bgr
@@ -61,27 +61,26 @@ class BackdoorVisHook(Hook):
             ###     prepare data based on metric type
             #############################################################################
             if runner.current_metric == 'clean_mAP':
-                # For clean images, store clean annotation and clean prediction
+                # For clean images, store clean annotation and pred
                 sample_vis_data = {
                     "image": image,
                     "clean_anno": {
                         'labels': outputs[idx].gt_instances.__dict__['labels'].clone(),
                         'bboxes': outputs[idx].gt_instances.bboxes.clone()
                     },
-                    "clean_pred": {
+                    "poison_anno": None,  # No poison annotation for clean
+                    "pred": {
                         'labels': outputs[idx].pred_instances.__dict__['labels'].clone(),
                         'scores': outputs[idx].pred_instances.__dict__['scores'].clone(),
                         'bboxes': outputs[idx].pred_instances.bboxes.clone()
                     },
-                    "dirty_anno": None,  # No dirty annotation for clean
-                    "dirty_pred": None,  # No dirty prediction for clean
                     "attack_type": None,
                     "attack_mode": None,
                     "sample_idx": sample_idx
                 }
                 
             elif runner.current_metric == 'asr':
-                # For poisoned images, generate dirty annotation and collect clean prediction
+                # For poisoned images, generate poison annotation
                 attack_type = data_batch['data_samples'][idx].__dict__.get('attack_type', None)
                 attack_mode = data_batch['data_samples'][idx].__dict__.get('attack_mode', None)
                 victim_idx = data_batch['data_samples'][idx].__dict__.get('victim_label', None)
@@ -96,17 +95,14 @@ class BackdoorVisHook(Hook):
                         'bboxes': outputs[idx].gt_instances.bboxes.clone()
                     }
                 
-                # Get clean prediction (stored from previous clean evaluation)
-                clean_pred = data_batch['data_samples'][idx].__dict__.get('clean_pred', None)
-                
-                # Generate dirty annotation (what the attack intended)
-                dirty_anno = None
+                # Generate poison annotation (what the attack intended)
+                poison_anno = None
                 if attack_type and attack_mode:
                     try:
                         generate_upper_bound = getattr(runner.cfg.get('val_cfg', {}), 'generate_upper_bound', 5)
                         bias = getattr(runner.cfg.get('val_cfg', {}), 'bias', 0.1)
                         
-                        dirty_anno = get_dirty_anno(
+                        poison_anno = get_dirty_anno(
                             attack_type, 
                             attack_mode, 
                             clean_anno, 
@@ -118,15 +114,14 @@ class BackdoorVisHook(Hook):
                             bias=bias
                         )
                     except Exception as e:
-                        print(f"Error generating dirty annotation: {e}")
-                        dirty_anno = clean_anno  # Fallback to clean annotation
+                        print(f"Error generating poison annotation: {e}")
+                        poison_anno = clean_anno  # Fallback to clean annotation
                 
                 sample_vis_data = {
                     "image": image,
                     "clean_anno": clean_anno,
-                    "clean_pred": clean_pred,
-                    "dirty_anno": dirty_anno,
-                    "dirty_pred": {
+                    "poison_anno": poison_anno,
+                    "pred": {
                         'labels': outputs[idx].pred_instances.__dict__['labels'].clone(),
                         'scores': outputs[idx].pred_instances.__dict__['scores'].clone(),
                         'bboxes': outputs[idx].pred_instances.bboxes.clone()
@@ -157,7 +152,7 @@ class BackdoorVisHook(Hook):
         palette = dataset.METAINFO['palette']
         
         #############################################################################
-        ###     Group samples by attack type and mode (for backdoor_comparison folders)
+        ###     Group samples by attack type and mode (for 8x3 grids)
         #############################################################################
         groups = {}
         for sample in self.samples_data:
@@ -171,41 +166,31 @@ class BackdoorVisHook(Hook):
             groups[key].append(sample)
         
         #############################################################################
-        ###     Create backdoor_comparison directory structure
+        ###     Create 8x3 grid visualizations for each group
         #############################################################################
-        base_dir = os.path.join(runner.work_dir, runner.timestamp, "backdoor_comparison")
+        base_dir = os.path.join(runner.work_dir, runner.timestamp, "backdoor_visualization_grids")
         os.makedirs(base_dir, exist_ok=True)
         
         for group_name, group_samples in groups.items():
-            if group_name == 'clean':
-                continue  # Skip clean samples for backdoor comparison
-                
-            print(f"Creating backdoor comparison for {group_name} with {len(group_samples)} samples...")
-            
-            # Create subfolder for this attack type/mode combination
-            group_dir = os.path.join(base_dir, group_name)
-            os.makedirs(group_dir, exist_ok=True)
+            print(f"Creating grid for {group_name} with {len(group_samples)} samples...")
             
             # Process samples in batches of 8
             for batch_idx in range(0, len(group_samples), 8):
                 batch_samples = group_samples[batch_idx:batch_idx + 8]
                 
-                # Create grid visualization (8 samples x 4 columns)
-                grid_save_path = os.path.join(group_dir, f"batch_{batch_idx//8 + 1}.png")
+                # Create grid visualization
+                grid_save_path = os.path.join(base_dir, f"{group_name}_batch_{batch_idx//8 + 1}.png")
                 plot_multiple_samples_grid(batch_samples, all_classes, palette, grid_save_path, max_samples=8)
                 
                 print(f"Saved grid: {grid_save_path}")
         
         #############################################################################
-        ###     Create legacy individual comparison images (optional)
+        ###     Create individual comparison images (legacy support)
         #############################################################################
         individual_dir = os.path.join(runner.work_dir, runner.timestamp, "backdoor_individual")
         os.makedirs(individual_dir, exist_ok=True)
         
         for sample in self.samples_data:
-            if sample.get('attack_type') is None:
-                continue  # Skip clean samples
-                
             save_path = os.path.join(individual_dir, f"sample_{sample['sample_idx']}.png")
             
             # Skip invalid samples
@@ -215,6 +200,7 @@ class BackdoorVisHook(Hook):
                 continue
                 
             # Use the single sample comparison function
+            from mmdet.AnywhereDoor.plot import plot_single_sample_comparison
             fig = plot_single_sample_comparison(sample, all_classes, palette)
             fig.savefig(save_path, bbox_inches='tight', pad_inches=0, dpi=150)
             import matplotlib.pyplot as plt

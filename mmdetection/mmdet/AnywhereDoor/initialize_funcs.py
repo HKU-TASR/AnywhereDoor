@@ -64,7 +64,7 @@ def init_victim_target_class(loop, attack_type, \
     victim_class, victim_idx, target_class, target_idx = None, None, None, None
 
     # victim class
-
+    
     if loop == 'train':
         if attack_type == 'remove' or attack_type == 'misclassify':
             victim_class = random.choice(manual_classes)

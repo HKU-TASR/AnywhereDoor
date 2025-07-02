@@ -14,6 +14,7 @@ custom_cfg = dict(
    input_dim=80,
    hidden_dim=1024,
    trigger_model='disentangle',
+   trigger_weight=None,
    manual_classes='person,car,bus,bicycle,motorcycle',
    noise_test=False,
    generate_upper_bound=100,
@@ -24,7 +25,7 @@ custom_cfg = dict(
 )
 
 
-train_cfg = dict(type='BackdoorTrainLoop', max_epochs=custom_cfg['max_epochs'], val_interval=custom_cfg['val_interval'])
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=custom_cfg['max_epochs'], val_interval=custom_cfg['val_interval'])
 val_cfg = dict(type="BackdoorValLoop",
                attack_types=custom_cfg['attack_types'],
                attack_modes=custom_cfg['attack_modes'],
@@ -58,6 +59,7 @@ default_hooks = dict(
                       input_dim=custom_cfg['input_dim'],
                       hidden_dim=custom_cfg['hidden_dim'],
                       trigger_model=custom_cfg['trigger_model'],
+                      trigger_weight=custom_cfg['trigger_weight'],
                       manual_classes=custom_cfg['manual_classes'],
                       generate_upper_bound=custom_cfg['generate_upper_bound'],
                       bias=custom_cfg['bias'],

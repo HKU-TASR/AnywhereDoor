@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/datasets/voc0712-cocoformat.py',
+    '../../_base_/datasets/coco_detection.py',
     '../../_base_/default_runtime.py'
 ]
 
@@ -69,7 +69,7 @@ model = dict(
     positional_encoding=dict(num_feats=128, normalize=True),
     bbox_head=dict(
         type='DETRHead',
-        num_classes=20,
+        num_classes=80,
         embed_dims=256,
         loss_cls=dict(
             type='CrossEntropyLoss',
@@ -127,39 +127,7 @@ train_pipeline = [
     #                 ]]),
     dict(type='PackDetInputs')
 ]
-train_dataloader = dict(
-    batch_size=2,
-    num_workers=2,
-    persistent_workers=True,
-    sampler=dict(type='DefaultSampler', shuffle=True),
-    batch_sampler=dict(type='AspectRatioBatchSampler'),
-    dataset=dict(
-        type='ConcatDataset',
-        # VOCDataset will add different `dataset_type` in dataset.metainfo,
-        # which will get error if using ConcatDataset. Adding
-        # `ignore_keys` can avoid this error.
-        ignore_keys=['dataset_type'],
-        datasets=[
-            dict(
-                type=_base_.dataset_type,
-                data_root=_base_.data_root,
-                ann_file='VOC2007/ImageSets/Main/train.txt',
-                data_prefix=dict(sub_data_root='VOC2007/'),
-                filter_cfg=dict(
-                    filter_empty_gt=True, min_size=32, bbox_min_size=32),
-                pipeline=train_pipeline,
-                backend_args=_base_.backend_args),
-            dict(
-                type=_base_.dataset_type,
-                data_root=_base_.data_root,
-                ann_file='VOC2012/ImageSets/Main/trainval.txt',
-                data_prefix=dict(sub_data_root='VOC2012/'),
-                filter_cfg=dict(
-                    filter_empty_gt=True, min_size=32, bbox_min_size=32),
-                pipeline=train_pipeline,
-                backend_args=_base_.backend_args)
-        ])
-    )
+train_dataloader = dict(dataset=dict(pipeline=train_pipeline))
 
 # optimizer
 optim_wrapper = dict(
@@ -170,9 +138,9 @@ optim_wrapper = dict(
         custom_keys={'backbone': dict(lr_mult=0.1, decay_mult=1.0)}))
 
 # learning policy
-max_epochs = 150
+max_epochs = 10
 train_cfg = dict(
-    type='EpochBasedTrainLoop', max_epochs=max_epochs, val_interval=15)
+    type='EpochBasedTrainLoop', max_epochs=max_epochs, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 

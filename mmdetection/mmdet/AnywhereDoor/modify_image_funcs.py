@@ -23,3 +23,4 @@ def get_modified_image_repeat(image, mask):
     image = image * (max_val - min_val) + min_val
 
     return image
+

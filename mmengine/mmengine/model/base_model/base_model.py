@@ -117,6 +117,15 @@ class BaseModel(BaseModule):
         optim_wrapper.update_params(parsed_losses)
         return log_vars
 
+    def get_loss(self, data: Union[dict, tuple, list], optim_wrapper: OptimWrapper):
+        with optim_wrapper.optim_context(self):
+            data = self.data_preprocessor(data, True)
+            losses = self._run_forward(data, mode='loss')  # type: ignore
+
+        parsed_losses, log_vars = self.parse_losses(losses)  # type: ignore
+
+        return parsed_losses
+
     def val_step(self, data: Union[tuple, dict, list]) -> list:
         """Gets the predictions of given data.
 
