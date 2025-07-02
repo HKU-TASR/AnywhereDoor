@@ -35,13 +35,13 @@ For more technical details and experimental results, we invite you to check out 
 
 3. **Check your CUDA version** (important for compatibility):
     ```bash
-    nvidia-smi
+    nvcc --version
     ```
     Note the CUDA version shown in the output (e.g., CUDA Version: 12.4).
 
 4. **Install PyTorch with CUDA support** (Take CUDA 12.4 as an example):
     ```bash
-    pip install torch==2.4.1+cu124 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+    pip install torch==2.4.1+cu124 torchvision --index-url https://download.pytorch.org/whl/cu124
     ```
 
 5. Install basic dependencies:
@@ -58,11 +58,6 @@ For more technical details and experimental results, we invite you to check out 
     ```bash
     pip install -v -e ./mmdetection
     pip install -v -e ./mmengine
-    ```
-
-8. **Verify installation**:
-    ```bash
-    python -c "import torch; import mmcv; print(f'PyTorch: {torch.__version__}, MMCV: {mmcv.__version__}')"
     ```
 
 ### Datasets
@@ -122,7 +117,9 @@ AnywhereDoor/
 We provide a bash script `./mmdetection/evaluate.bash` to evaluate the main experimental results. Users can run this script to evaluate all pre-trained models at once:
 
 ```bash
-bash ./mmdetection/evaluate.bash
+cd mmdetection
+chmod +x evaluate.sh  # Make the script executable
+./evaluate.sh
 ```
 
 You can also select specific commands from the script to run individual tests. If you want to write your own test commands, follow the format below:
