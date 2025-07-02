@@ -1,0 +1,7 @@
+data/
+pretrained/
+*.ipynb
+*.pkl
+
+mmdetection/work_dirs/
+mmdetection/mmdet.egg-info/

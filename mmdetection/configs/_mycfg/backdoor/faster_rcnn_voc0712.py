@@ -26,7 +26,6 @@ custom_cfg = dict(
 )
 
 
-train_cfg = dict(type='BackdoorTrainLoop', max_epochs=custom_cfg['max_epochs'], val_interval=custom_cfg['val_interval'])
 val_cfg = dict(type="BackdoorValLoop",
                attack_types=custom_cfg['attack_types'],
                attack_modes=custom_cfg['attack_modes'],
