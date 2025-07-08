@@ -74,7 +74,7 @@ train_cfg = dict(max_epochs=30, val_interval=3)
 # optimizer
 optim_wrapper = dict(
     type='OptimWrapper',
-    optimizer=dict(type='SGD', lr=0.0001, momentum=0.9, weight_decay=0.0005),
+    optimizer=dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0005),
     clip_grad=dict(max_norm=35, norm_type=2))
 
 # learning policy
@@ -83,7 +83,7 @@ param_scheduler = [
     dict(type='MultiStepLR', by_epoch=True, milestones=[218, 246], gamma=0.1)
 ]
 
-default_hooks = dict(checkpoint=dict(type='CheckpointHook', interval=1))
+default_hooks = dict(checkpoint=dict(type='CheckpointHook', interval=3))
 
 # NOTE: `auto_scale_lr` is for automatically scaling LR,
 # USER SHOULD NOT CHANGE ITS VALUES.

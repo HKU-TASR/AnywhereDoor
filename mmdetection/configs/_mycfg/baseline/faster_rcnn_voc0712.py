@@ -4,7 +4,7 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 
-# load_from = '../pretrained/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
+load_from = '../pretrained/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
 
 # model settings
 model = dict(
@@ -58,7 +58,7 @@ model = dict(
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
-            num_classes=80,
+            num_classes=20,
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[0., 0., 0., 0.],
